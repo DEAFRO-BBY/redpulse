@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedPulse| Premium Blood Donation Network</title>
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase CDN Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <i class="fa-solid fa-droplet pulse"></i>
+        <span>RedPulse</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#stats">Impact</a></li>
+        <li><a href="#active-requests">Live Requests</a></li>
+        <li><a href="javascript:void(0)" onclick="openAuthModal('login')">Log In</a></li>
+        <li><a href="javascript:void(0)" class="btn-primary" onclick="openAuthModal('signup')">Register</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <span class="badge">Join the Life-Saving Network</span>
+        <h1>Every Drop Counts.<br><span class="highlight">Every Second Matters.</span></h1>
+        <p>PulseRed connects volunteers with local hospital blood demands in real-time. Secure, fast, and completely powered by people who care.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" onclick="openAuthModal('signup', 'donor')">Become a Donor</button>
+          <button class="btn-secondary" onclick="openAuthModal('signup', 'recipient')">Need Blood?</button>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="blood-drop-sphere">
+          <i class="fa-solid fa-droplet floating-drop"></i>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Impact Section -->
+  <section id="stats" class="stats-section">
+    <div class="section-container">
+      <h2 class="section-title">Our Real-time Impact</h2>
+      <p class="section-subtitle">Connecting communities to bridge the gap in supply and demand.</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <i class="fa-solid fa-users icon-red"></i>
+          <h3 id="stat-donors">1,240</h3>
+          <p>Active Donors</p>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-hand-holding-heart icon-red"></i>
+          <h3 id="stat-saved">3,892</h3>
+          <p>Lives Saved</p>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-hospital-user icon-red"></i>
+          <h3 id="stat-requests">98%</h3>
+          <p>Request Success Rate</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Active Requests Section -->
+  <section id="active-requests" class="requests-section">
+    <div class="section-container">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Live Urgent Demands</h2>
+          <p class="section-subtitle">Verify details and log in to commit a donation.</p>
+        </div>
+        <div class="filter-wrapper">
+          <select id="blood-filter" onchange="loadPublicRequests()">
+            <option value="ALL">All Blood Types</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
+      </div>
+      <div id="requests-grid" class="requests-grid">
+        <!-- Rendered dynamically -->
+        <div class="loading-placeholder">
+          <i class="fa-solid fa-circle-notch fa-spin"></i> Loading active requests...
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Auth Modal Overlay -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeAuthModal()"><i class="fa-solid fa-xmark"></i></button>
+      
+      <div class="modal-tabs">
+        <button id="tab-login" class="tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+        <button id="tab-signup" class="tab-btn" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+          <div class="input-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" required placeholder="name@example.com">
+          </div>
+          <div class="input-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn-primary btn-block">Sign In <i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="signup-form" class="auth-form hidden" onsubmit="handleSignup(event)">
+          <div class="input-grid">
+            <div class="input-group">
+              <label for="signup-name">Full Name</label>
+              <input type="text" id="signup-name" required placeholder="John Doe">
+            </div>
+            <div class="input-group">
+              <label for="signup-email">Email Address</label>
+              <input type="email" id="signup-email" required placeholder="john@example.com">
+            </div>
+            <div class="input-group">
+              <label for="signup-phone">Contact Number</label>
+              <input type="tel" id="signup-phone" required placeholder="+1 234 567 8900">
+            </div>
+            <div class="input-group">
+              <label for="signup-location">Location / City</label>
+              <input type="text" id="signup-location" required placeholder="New York, NY">
+            </div>
+            <div class="input-group">
+              <label for="signup-role">Are you donating or requesting?</label>
+              <select id="signup-role" onchange="toggleSignupFields()" required>
+                <option value="donor">Donor (Volunteer)</option>
+                <option value="recipient">Recipient (Patient/Hospital)</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="signup-blood">Blood Type</label>
+              <select id="signup-blood" required>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+            <div class="input-group full-width">
+              <label for="signup-password">Password</label>
+              <input type="password" id="signup-password" required placeholder="Minimum 6 characters">
+            </div>
+          </div>
+          <button type="submit" class="btn-primary btn-block">Create Account <i class="fa-solid fa-user-plus"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <p>&copy; 2026 PulseRed Blood Donation Platform. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
