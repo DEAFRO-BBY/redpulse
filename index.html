@@ -3,35 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RedPulse| Premium Blood Donation Network</title>
-  <!-- Google Fonts & FontAwesome -->
+  <title>PulseRed | Premium Blood Donation Network</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
-  <!-- Supabase CDN Client -->
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   
-  <!-- Navigation -->
+  
   <nav class="navbar">
     <div class="nav-container">
       <a href="index.html" class="nav-logo">
         <i class="fa-solid fa-droplet pulse"></i>
-        <span>RedPulse</span>
+        <span>PulseRed</span>
       </a>
       <ul class="nav-links">
         <li><a href="#stats">Impact</a></li>
+        <li><a href="#blood-stock">Blood Stock</a></li>
+        <li><a href="#donor-directory">Find Donors</a></li>
         <li><a href="#active-requests">Live Requests</a></li>
+        <li><a href="#campaign-reports">Reports</a></li>
         <li><a href="javascript:void(0)" onclick="openAuthModal('login')">Log In</a></li>
         <li><a href="javascript:void(0)" class="btn-primary" onclick="openAuthModal('signup')">Register</a></li>
       </ul>
     </div>
   </nav>
 
-  <!-- Hero Section -->
+  
   <header class="hero">
     <div class="hero-container">
       <div class="hero-content">
@@ -51,7 +54,7 @@
     </div>
   </header>
 
-  <!-- Impact Section -->
+  
   <section id="stats" class="stats-section">
     <div class="section-container">
       <h2 class="section-title">Our Real-time Impact</h2>
@@ -76,7 +79,60 @@
     </div>
   </section>
 
-  <!-- Active Requests Section -->
+  
+  <section id="blood-stock" class="stock-section">
+    <div class="section-container">
+      <h2 class="section-title">Blood Bank Stock Levels</h2>
+      <p class="section-subtitle">Real-time inventory levels across regional medical facilities.</p>
+      <div class="stock-grid" id="stock-grid-container">
+        
+        <div class="loading-placeholder">
+          <i class="fa-solid fa-circle-notch fa-spin"></i> Loading stock inventory...
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section id="donor-directory" class="directory-section">
+    <div class="section-container">
+      <h2 class="section-title">Search Volunteer Donors</h2>
+      <p class="section-subtitle">Find registered donors in your area who are currently active and available.</p>
+      
+      <div class="card search-box-card">
+        <form id="donor-search-form" onsubmit="handleDonorSearch(event)" class="search-form-grid">
+          <div class="input-group">
+            <label for="search-blood-type">Required Blood Type</label>
+            <select id="search-blood-type" required>
+              <option value="ALL">All Blood Types</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="search-location">City / Location</label>
+            <input type="text" id="search-location" placeholder="e.g. New York or leave blank">
+          </div>
+          <div class="input-group search-btn-container">
+            <button type="submit" class="btn-primary search-btn"><i class="fa-solid fa-magnifying-glass"></i> Find Donors</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="search-results-container" class="search-results-list">
+        
+        <p class="empty-placeholder">Select parameters above to search volunteer registry.</p>
+      </div>
+    </div>
+  </section>
+
+  
   <section id="active-requests" class="requests-section">
     <div class="section-container">
       <div class="section-header">
@@ -99,7 +155,6 @@
         </div>
       </div>
       <div id="requests-grid" class="requests-grid">
-        <!-- Rendered dynamically -->
         <div class="loading-placeholder">
           <i class="fa-solid fa-circle-notch fa-spin"></i> Loading active requests...
         </div>
@@ -107,7 +162,78 @@
     </div>
   </section>
 
-  <!-- Auth Modal Overlay -->
+  
+  <section id="campaign-reports" class="reports-section">
+    <div class="section-container">
+      <h2 class="section-title">Annual Campaign Reports</h2>
+      <p class="section-subtitle">A look into donations progress and hospital matches.</p>
+      
+      <div class="reports-grid-layout">
+    
+        <div class="card report-chart-card">
+          <h3 class="card-title">Weekly Donations Volume</h3>
+          <p class="card-subtitle">Units matched and verified per week.</p>
+          <div class="bar-chart-visual">
+            <div class="chart-bar-col">
+              <div class="bar-fill" style="height: 65%;">
+                <span class="bar-value">65</span>
+              </div>
+              <span class="bar-label">Wk 1</span>
+            </div>
+            <div class="chart-bar-col">
+              <div class="bar-fill" style="height: 80%;">
+                <span class="bar-value">80</span>
+              </div>
+              <span class="bar-label">Wk 2</span>
+            </div>
+            <div class="chart-bar-col">
+              <div class="bar-fill" style="height: 95%;">
+                <span class="bar-value">95</span>
+              </div>
+              <span class="bar-label">Wk 3</span>
+            </div>
+            <div class="chart-bar-col text-red-bar">
+              <div class="bar-fill" style="height: 120px;">
+                <span class="bar-value" id="report-live-week">120</span>
+              </div>
+              <span class="bar-label">Wk 4 (Live)</span>
+            </div>
+          </div>
+        </div>
+
+    
+        <div class="card report-metrics-card">
+          <h3 class="card-title">Success Outcomes</h3>
+          <p class="card-subtitle">Detailed breakdown of platform achievements.</p>
+          <ul class="report-metrics-list">
+            <li>
+              <div class="metric-desc">
+                <span class="metric-label">Emergency Match Rate</span>
+                <span class="metric-val">94.8%</span>
+              </div>
+              <div class="progress-bar-flat"><div class="fill-flat" style="width: 94.8%;"></div></div>
+            </li>
+            <li>
+              <div class="metric-desc">
+                <span class="metric-label">Hospital Affiliations</span>
+                <span class="metric-val">42 hospitals</span>
+              </div>
+              <div class="progress-bar-flat"><div class="fill-flat" style="width: 75%;"></div></div>
+            </li>
+            <li>
+              <div class="metric-desc">
+                <span class="metric-label">Average Response Time</span>
+                <span class="metric-val">12 minutes</span>
+              </div>
+              <div class="progress-bar-flat"><div class="fill-flat" style="width: 90%;"></div></div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
   <div id="auth-modal" class="modal-overlay">
     <div class="modal-card">
       <button class="modal-close" onclick="closeAuthModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -118,7 +244,7 @@
       </div>
 
       <div class="modal-body">
-        <!-- Login Form -->
+        
         <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
           <div class="input-group">
             <label for="login-email">Email Address</label>
@@ -131,7 +257,7 @@
           <button type="submit" class="btn-primary btn-block">Sign In <i class="fa-solid fa-arrow-right-to-bracket"></i></button>
         </form>
 
-        <!-- Signup Form -->
+        
         <form id="signup-form" class="auth-form hidden" onsubmit="handleSignup(event)">
           <div class="input-grid">
             <div class="input-group">
