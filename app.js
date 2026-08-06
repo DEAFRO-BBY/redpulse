@@ -1,8 +1,8 @@
+
 const SUPABASE_URL = 'https://jdutglctiizcxxmuuijq.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_cV9FsuqL8Dq1BkrqJkSwhQ_L2ckO8fA';
 
 let supabaseClient = null;
-
 
 if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
   try {
@@ -21,6 +21,7 @@ if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
 
 
 let currentUserProfile = null;
+
 
 const DONATE_COMPATIBILITY = {
   'O-': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
@@ -42,10 +43,13 @@ const RECEIVE_COMPATIBILITY = {
   'B+': ['O-', 'O+', 'B-', 'B+'],
   'AB-': ['O-', 'A-', 'B-', 'AB-'],
   'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
-}
+};
 
+// ==========================================================================
+// INITIALIZATION & AUTH STATE HANDLERS
+// ==========================================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  
+  // Determine page type
   const isDashboard = window.location.pathname.includes('dashboard.html');
   
   if (!supabaseClient) {
@@ -63,23 +67,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  
+  // Monitor auth state changes
   supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (session) {
-      
+      // Get profile
       currentUserProfile = await fetchProfile(session.user.id);
       
       if (!isDashboard) {
-        
+        // Logged in user on landing page should redirect to dashboard
         window.location.href = 'dashboard.html';
       } else {
-        
+        // Update dashboard details
         setupDashboardUI();
       }
     } else {
       currentUserProfile = null;
       if (isDashboard) {
-        
+        // Unauthorized dashboard user redirects to landing
         window.location.href = 'index.html';
       } else {
         loadPublicRequests();
@@ -90,6 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
+// Fetch Profile from public.profiles
 async function fetchProfile(userId) {
   try {
     const { data, error } = await supabaseClient
@@ -106,14 +111,16 @@ async function fetchProfile(userId) {
   }
 }
 
-
+// ==========================================================================
+// LANDING PAGE FUNCTIONALITY
+// ==========================================================================
 async function loadPublicRequests() {
   const gridElement = document.getElementById('requests-grid');
   if (!gridElement) return;
 
   const bloodFilter = document.getElementById('blood-filter').value;
 
-
+  // Render dummy data if Supabase is not configured yet
   if (!supabaseClient) {
     renderDummyPublicRequests(gridElement, bloodFilter);
     return;
@@ -177,7 +184,7 @@ async function loadPublicRequests() {
   }
 }
 
-
+// Fallback dummy rendering
 function renderDummyPublicRequests(gridElement, filter) {
   const dummy = [
     { id: '1', blood_type: 'O-', units_needed: 2, hospital_name: 'Metro General Hospital', location: 'New York, NY', urgency: 'Critical', status: 'Pending', created_at: new Date() },
@@ -215,6 +222,9 @@ function renderDummyPublicRequests(gridElement, filter) {
   });
 }
 
+// ==========================================================================
+// MODAL & AUTH TAB TOGGLES
+// ==========================================================================
 function openAuthModal(mode, defaultRole = 'donor') {
   const modal = document.getElementById('auth-modal');
   modal.classList.add('active');
@@ -253,6 +263,9 @@ function toggleSignupFields() {
   const bloodInputGroup = document.getElementById('signup-blood').closest('.input-group');
 }
 
+// ==========================================================================
+// AUTH SIGN UP & LOGIN SUBMISSIONS
+// ==========================================================================
 async function handleSignup(event) {
   event.preventDefault();
   if (!supabaseClient) return alert("Please set Supabase URL and Anon Key in app.js first!");
@@ -315,18 +328,21 @@ async function handleLogout() {
   window.location.href = 'index.html';
 }
 
+// ==========================================================================
+// DASHBOARD UI HANDLERS & FETCHERS
+// ==========================================================================
 async function setupDashboardUI() {
   if (!currentUserProfile) return;
 
-  
+  // Set Profile Name and Badges
   document.getElementById('profile-name').textContent = currentUserProfile.full_name;
   document.getElementById('profile-role-badge').textContent = currentUserProfile.role;
   document.getElementById('user-avatar-tag').textContent = currentUserProfile.full_name[0].toUpperCase();
 
-  
+  // Hide loader
   document.getElementById('dashboard-loader').classList.add('hidden');
 
-  
+  // Load correct panel
   const panelDonor = document.getElementById('panel-donor');
   const panelRecipient = document.getElementById('panel-recipient');
   const panelAdmin = document.getElementById('panel-admin');
@@ -337,7 +353,7 @@ async function setupDashboardUI() {
 
   if (currentUserProfile.role === 'donor') {
     panelDonor.classList.remove('hidden');
-    
+    // Load donor data
     document.getElementById('donor-blood-type').textContent = currentUserProfile.blood_type;
     document.getElementById('donor-profile-name').textContent = currentUserProfile.full_name;
     document.getElementById('donor-profile-location').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${currentUserProfile.location || 'Not Specified'}`;
@@ -361,6 +377,9 @@ async function setupDashboardUI() {
   }
 }
 
+// ==========================================================================
+// DONOR DASHBOARD LOGIC
+// ==========================================================================
 async function toggleDonorAvailability(isChecked) {
   try {
     const { error } = await supabaseClient
@@ -383,7 +402,7 @@ async function loadDonorMatches() {
   if (!container) return;
 
   try {
-  
+    // Fetch all active pending requests
     const { data, error } = await supabaseClient
       .from('blood_requests')
       .select('*')
@@ -391,7 +410,7 @@ async function loadDonorMatches() {
     
     if (error) throw error;
 
-    
+    // Filter compatibility client-side using our helper map
     const myBlood = currentUserProfile.blood_type;
     const compatibleRecipientTypes = DONATE_COMPATIBILITY[myBlood] || [];
     const matches = data.filter(req => compatibleRecipientTypes.includes(req.blood_type));
@@ -479,6 +498,9 @@ async function loadDonorHistory() {
   }
 }
 
+// ==========================================================================
+// RECIPIENT DASHBOARD LOGIC
+// ==========================================================================
 async function submitBloodRequest(event) {
   event.preventDefault();
   const type = document.getElementById('req-blood-type').value;
@@ -734,6 +756,7 @@ async function runMatchEngine(requestString) {
   }
 }
 
+
 async function loadBloodStock() {
   const container = document.getElementById('stock-grid-container');
   if (!container) return;
@@ -802,13 +825,25 @@ async function handleDonorSearch(event) {
     </div>
   `;
 
+  
+  let session = null;
+  if (supabaseClient) {
+    const { data } = await supabaseClient.auth.getSession();
+    session = data.session;
+  }
+
   let donorsList = [];
 
   if (supabaseClient) {
     try {
+      let selectFields = 'full_name, blood_type, location, is_available';
+      if (session) {
+        selectFields += ', contact_number';
+      }
+      
       let query = supabaseClient
         .from('profiles')
-        .select('full_name, blood_type, location, contact_number, is_available')
+        .select(selectFields)
         .eq('role', 'donor')
         .eq('is_available', true);
 
@@ -827,12 +862,12 @@ async function handleDonorSearch(event) {
   } else {
     
     const mockDonors = [
-      { full_name: "Jane Smith", blood_type: "O-", location: "New York", contact_number: "+256-791324514", is_available: true },
-      { full_name: "Robert Johnson", blood_type: "A+", location: "Brooklyn", contact_number:"+256-756576776", is_available: true },
-      { full_name: "Emily Davis", blood_type: "B-", location: "New York", contact_number: "+256-791324514", is_available: true },
-      { full_name: "Michael Brown", blood_type: "O+", location: "Queens", contact_number: "+256-791324514", is_available: true },
-      { full_name: "Alice Wilson", blood_type: "AB-", location: "Manhattan", contact_number: "+256-791324514", is_available: true },
-      { full_name: "David Miller", blood_type: "O-", location: "Brooklyn", contact_number: "+256-791324514", is_available: true }
+      { full_name: "Jane Smith", blood_type: "O-", location: "New York", contact_number: "+1 555-0192", is_available: true },
+      { full_name: "Robert Johnson", blood_type: "A+", location: "Brooklyn", contact_number: "+1 555-0143", is_available: true },
+      { full_name: "Emily Davis", blood_type: "B-", location: "New York", contact_number: "+1 555-0187", is_available: true },
+      { full_name: "Michael Brown", blood_type: "O+", location: "Queens", contact_number: "+1 555-0165", is_available: true },
+      { full_name: "Alice Wilson", blood_type: "AB-", location: "Manhattan", contact_number: "+1 555-0112", is_available: true },
+      { full_name: "David Miller", blood_type: "O-", location: "Brooklyn", contact_number: "+1 555-0177", is_available: true }
     ];
     donorsList = mockDonors.filter(donor => {
       const typeMatch = bloodType === 'ALL' || donor.blood_type === bloodType;
@@ -841,7 +876,6 @@ async function handleDonorSearch(event) {
     });
   }
 
-  
   if (supabaseClient && locationQuery) {
     donorsList = donorsList.filter(d => d.location && d.location.toLowerCase().includes(locationQuery));
   }
@@ -849,13 +883,6 @@ async function handleDonorSearch(event) {
   if (donorsList.length === 0) {
     resultsContainer.innerHTML = `<p class="empty-placeholder">No active donors match your parameters. Try broadening your location.</p>`;
     return;
-  }
-
-  
-  let session = null;
-  if (supabaseClient) {
-    const { data } = await supabaseClient.auth.getSession();
-    session = data.session;
   }
 
   resultsContainer.innerHTML = '';
@@ -888,7 +915,7 @@ async function loadReports() {
 
   if (supabaseClient) {
     try {
-      // Query donation log count in the last week or total approved count
+      
       const { data, error } = await supabaseClient
         .from('donations_log')
         .select('units_donated')
@@ -896,7 +923,6 @@ async function loadReports() {
 
       if (!error && data) {
         const totalApprovedUnits = data.reduce((sum, item) => sum + item.units_donated, 0);
-        // Base chart volume is 120, let's add live donations units to it
         chartLiveWeek.textContent = 120 + totalApprovedUnits;
         document.getElementById('report-live-week').parentElement.style.height = `${Math.min(100, 50 + totalApprovedUnits * 5)}%`;
       }
@@ -905,3 +931,165 @@ async function loadReports() {
     }
   }
 }
+
+
+function openProfileModal() {
+  const modal = document.getElementById('profile-modal');
+  if (!modal || !currentUserProfile) return;
+
+
+  document.getElementById('profile-edit-name').value = currentUserProfile.full_name || '';
+  document.getElementById('profile-edit-phone').value = currentUserProfile.contact_number || '';
+  document.getElementById('profile-edit-location').value = currentUserProfile.location || '';
+  
+  const bloodSelect = document.getElementById('profile-edit-blood');
+  if (bloodSelect) {
+    bloodSelect.value = currentUserProfile.blood_type || 'O+';
+  }
+
+  const availabilityToggle = document.getElementById('profile-edit-available');
+  if (availabilityToggle) {
+    availabilityToggle.checked = currentUserProfile.is_available;
+  }
+
+  const bloodGroup = document.getElementById('profile-edit-blood-group');
+  const availableGroup = document.getElementById('profile-edit-available-group');
+
+  if (currentUserProfile.role !== 'donor') {
+    if (bloodGroup) bloodGroup.classList.add('hidden');
+    if (availableGroup) availableGroup.classList.add('hidden');
+  } else {
+    if (bloodGroup) bloodGroup.classList.remove('hidden');
+    if (availableGroup) availableGroup.classList.remove('hidden');
+  }
+
+  modal.classList.add('active');
+}
+
+function closeProfileModal() {
+  const modal = document.getElementById('profile-modal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+}
+
+async function saveProfileSettings(event) {
+  event.preventDefault();
+  if (!supabaseClient || !currentUserProfile) return;
+
+  const name = document.getElementById('profile-edit-name').value;
+  const phone = document.getElementById('profile-edit-phone').value;
+  const location = document.getElementById('profile-edit-location').value;
+  
+  const updates = {
+    full_name: name,
+    contact_number: phone,
+    location: location
+  };
+
+  
+  if (currentUserProfile.role === 'donor') {
+    updates.blood_type = document.getElementById('profile-edit-blood').value;
+    updates.is_available = document.getElementById('profile-edit-available').checked;
+  }
+
+  try {
+    const { error } = await supabaseClient
+      .from('profiles')
+      .update(updates)
+      .eq('id', currentUserProfile.id);
+
+    if (error) throw error;
+
+    alert("Profile updated successfully!");
+    
+  
+    currentUserProfile = { ...currentUserProfile, ...updates };
+    setupDashboardUI();
+    closeProfileModal();
+  } catch (error) {
+    alert("Error updating profile: " + error.message);
+  }
+}
+
+async function handleHospitalSearch(event) {
+  event.preventDefault();
+  const resultsContainer = document.getElementById('hosp-search-results');
+  if (!resultsContainer) return;
+
+  const bloodType = document.getElementById('hosp-search-blood').value;
+  const locationQuery = document.getElementById('hosp-search-loc').value.trim().toLowerCase();
+
+  resultsContainer.innerHTML = `
+    <div class="loading-placeholder">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Querying donor registry...
+    </div>
+  `;
+
+  let donorsList = [];
+
+  if (supabaseClient) {
+    try {
+      let query = supabaseClient
+        .from('profiles')
+        .select('full_name, blood_type, location, contact_number, is_available')
+        .eq('role', 'donor')
+        .eq('is_available', true);
+
+      if (bloodType !== 'ALL') {
+        query = query.eq('blood_type', bloodType);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      donorsList = data;
+    } catch (err) {
+      console.error("Error searching live donors:", err);
+      resultsContainer.innerHTML = `<p class="empty-placeholder text-red">Failed to query volunteer directory.</p>`;
+      return;
+    }
+  } else {
+  
+    const mockDonors = [
+      { full_name: "Jane Smith", blood_type: "O-", location: "New York", contact_number: "+1 555-0192", is_available: true },
+      { full_name: "Robert Johnson", blood_type: "A+", location: "Brooklyn", contact_number: "+1 555-0143", is_available: true },
+      { full_name: "Emily Davis", blood_type: "B-", location: "New York", contact_number: "+1 555-0187", is_available: true },
+      { full_name: "Michael Brown", blood_type: "O+", location: "Queens", contact_number: "+1 555-0165", is_available: true },
+      { full_name: "Alice Wilson", blood_type: "AB-", location: "Manhattan", contact_number: "+1 555-0112", is_available: true },
+      { full_name: "David Miller", blood_type: "O-", location: "Brooklyn", contact_number: "+1 555-0177", is_available: true }
+    ];
+    donorsList = mockDonors.filter(donor => {
+      const typeMatch = bloodType === 'ALL' || donor.blood_type === bloodType;
+      const locMatch = !locationQuery || donor.location.toLowerCase().includes(locationQuery);
+      return typeMatch && locMatch;
+    });
+  }
+
+  if (supabaseClient && locationQuery) {
+    donorsList = donorsList.filter(d => d.location && d.location.toLowerCase().includes(locationQuery));
+  }
+
+  if (donorsList.length === 0) {
+    resultsContainer.innerHTML = `<p class="empty-placeholder">No matching active donors found. Try broadening your location parameters.</p>`;
+    return;
+  }
+
+  resultsContainer.innerHTML = '';
+  donorsList.forEach(donor => {
+    const card = document.createElement('div');
+    card.className = 'match-item';
+    card.style.borderLeftColor = 'var(--success-green)';
+    card.innerHTML = `
+      <div class="match-details">
+        <h5>${donor.full_name} (${donor.blood_type})</h5>
+        <p><i class="fa-solid fa-location-dot"></i> Location: ${donor.location || 'Unknown'}</p>
+        <p><i class="fa-solid fa-phone"></i> Contact: <strong>${donor.contact_number || 'N/A'}</strong></p>
+      </div>
+      <div>
+        <a href="tel:${donor.contact_number}" class="btn-primary" style="padding: 6px 12px; font-size: 12px;"><i class="fa-solid fa-phone"></i> Call Donor</a>
+      </div>
+    `;
+    resultsContainer.appendChild(card);
+  });
+}
+
