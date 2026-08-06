@@ -90,4 +90,271 @@
         
         <div class="grid-col-8">
           <div class="card">
-            <h3 class="card-title">…
+            <h3 class="card-title"><i class="fa-solid fa-heart-circle-exclamation text-red"></i> Active Compatible Requests</h3>
+            <p class="card-subtitle">These patients or clinics need your exact blood type. Contact them directly to schedule.</p>
+            <div id="donor-matches" class="list-container">
+              
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Your Donation History</h3>
+            <div id="donor-history" class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Units</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="donor-history-rows">
+                
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section id="panel-recipient" class="dashboard-panel hidden">
+      <div class="dashboard-grid">
+        
+        
+        <div class="grid-col-5">
+          <div class="card form-card">
+            <h3 class="card-title"><i class="fa-solid fa-square-plus text-red"></i> Request Blood Supply</h3>
+            <p class="card-subtitle">Broadcast requests across our active donor network.</p>
+            
+            <form id="blood-request-form" onsubmit="submitBloodRequest(event)">
+              <div class="input-group">
+                <label for="req-blood-type">Required Blood Type</label>
+                <select id="req-blood-type" required>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="req-units">Units Needed</label>
+                <input type="number" id="req-units" min="1" max="100" required placeholder="e.g. 2">
+              </div>
+              <div class="input-group">
+                <label for="req-hospital">Hospital Name</label>
+                <input type="text" id="req-hospital" required placeholder="City Central Hospital">
+              </div>
+              <div class="input-group">
+                <label for="req-location">Hospital Address / City</label>
+                <input type="text" id="req-location" required placeholder="32nd Boulevard, Sector 4">
+              </div>
+              <div class="input-group">
+                <label for="req-urgency">Urgency Level</label>
+                <select id="req-urgency" required>
+                  <option value="Low">Low - Preparedness</option>
+                  <option value="Medium">Medium - Regular Demand</option>
+                  <option value="High">High - Urgent Case</option>
+                  <option value="Critical">Critical - Immediate Emergency</option>
+                </select>
+              </div>
+              <button type="submit" class="btn-primary btn-block">Broadcast Request <i class="fa-solid fa-rss"></i></button>
+            </form>
+          </div>
+        </div>
+
+    
+        <div class="grid-col-7">
+          <div class="card">
+            <h3 class="card-title"><i class="fa-solid fa-list-check"></i> Your Active Requests</h3>
+            <p class="card-subtitle">Manage requests you have sent to the public registry.</p>
+            <div id="recipient-requests" class="list-container">
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section id="panel-admin" class="dashboard-panel hidden">
+    
+      <div class="admin-stats-strip">
+        <div class="admin-stat-small">
+          <span>Pending Verifications</span>
+          <h2 id="admin-pending-count">0</h2>
+        </div>
+        <div class="admin-stat-small">
+          <span>Active Requests</span>
+          <h2 id="admin-active-requests">0</h2>
+        </div>
+        <div class="admin-stat-small">
+          <span>Total Verified Donors</span>
+          <h2 id="admin-donors-count">0</h2>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        
+        <div class="grid-col-6">
+          <div class="card">
+            <h3 class="card-title"><i class="fa-solid fa-shield-halved text-red"></i> Verification Queue</h3>
+            <p class="card-subtitle">Verify user-submitted donation reports to update profiles.</p>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Donor Name</th>
+                    <th>Date</th>
+                    <th>Units</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-queue-rows">
+                
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="grid-col-6">
+          <div class="card">
+            <h3 class="card-title"><i class="fa-solid fa-microchip text-red"></i> Donor Matching Engine</h3>
+            <p class="card-subtitle">Select a request below to compute available compatible donors.</p>
+            
+            <div class="input-group">
+              <label for="admin-select-request">Select Active Request</label>
+              <select id="admin-select-request" onchange="runMatchEngine(this.value)">
+                <option value="">-- Select request to calculate matches --</option>
+              </select>
+            </div>
+
+            <div class="match-results-container">
+              <h4>Matches Found</h4>
+              <div id="engine-matches" class="engine-matches-list">
+                <p class="empty-placeholder">Select a request above to trigger calculations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section id="panel-profile" class="dashboard-panel hidden">
+      <div class="dashboard-grid">
+        
+        <div class="grid-col-4">
+          <div class="card donor-profile-card">
+            <div class="blood-bag">
+              <span class="blood-type-display" id="profile-card-blood-type">O-</span>
+            </div>
+            <h3 id="profile-card-name">User Name</h3>
+            <p id="profile-card-location"><i class="fa-solid fa-location-dot"></i> Location</p>
+            <p id="profile-card-role"><i class="fa-solid fa-user-tag"></i> <span class="user-role">Role</span></p>
+
+            <hr class="card-divider">
+
+            <div class="status-toggle-wrapper">
+              <span>Donation Availability</span>
+              <label class="switch">
+                <input type="checkbox" id="profile-availability-toggle" onchange="toggleProfileAvailability(this.checked)">
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <p class="meta-note" id="profile-availability-text">You are listed as active for urgent matching.</p>
+          </div>
+
+          <div class="card">
+            <h4><i class="fa-solid fa-shield-halved text-red"></i> Membership Info</h4>
+            <hr class="card-divider">
+            <p class="meta-note" style="margin-bottom:6px;">Member since</p>
+            <p id="profile-created-at" style="font-weight:600; color:#0f1d3a;">—</p>
+            <hr class="card-divider">
+            <p class="meta-note" style="margin-bottom:6px;">Last Donation Date</p>
+            <p id="profile-last-donation" style="font-weight:600; color:#0f1d3a;">No donations yet</p>
+          </div>
+        </div>
+
+        
+        <div class="grid-col-8">
+          <div class="card">
+            <h3 class="card-title"><i class="fa-solid fa-user-pen text-red"></i> Edit Profile</h3>
+            <p class="card-subtitle">Update your personal details. Changes are saved to your RedPulse profile instantly.</p>
+
+            <form id="profile-form" onsubmit="saveProfile(event)">
+              <div class="input-grid">
+                <div class="input-group">
+                  <label for="profile-full-name">Full Name</label>
+                  <input type="text" id="profile-full-name" required placeholder="John Doe">
+                </div>
+                <div class="input-group">
+                  <label for="profile-email">Email Address</label>
+                  <input type="email" id="profile-email" required placeholder="john@example.com">
+                  <p class="meta-note">Changing your email sends a verification link to the new address. Your login will use the new email after confirmation.</p>
+                </div>
+                <div class="input-group">
+                  <label for="profile-phone">Contact Number</label>
+                  <input type="tel" id="profile-phone" required placeholder="+256-700-000-000">
+                </div>
+                <div class="input-group">
+                  <label for="profile-location">Location / City</label>
+                  <input type="text" id="profile-location" required placeholder="Uganda, Kampala">
+                </div>
+                <div class="input-group">
+                  <label for="profile-blood">Blood Type</label>
+                  <select id="profile-blood" required>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="profile-role">Role</label>
+                  <select id="profile-role" required>
+                    <option value="donor">Donor (Volunteer)</option>
+                    <option value="recipient">Recipient (Patient/Hospital)</option>
+                    <option value="admin">Admin (Coordinator)</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary btn-block">Save Changes <i class="fa-solid fa-floppy-disk"></i></button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title"><i class="fa-solid fa-arrow-left text-red"></i> Navigate</h3>
+            <p class="card-subtitle">Jump back to your role-based dashboard.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn-secondary" id="profile-back-donor" style="display:none;" onclick="showDonorPanel()"><i class="fa-solid fa-heart-pulse"></i> Donor Dashboard</button>
+              <button class="btn-secondary" id="profile-back-recipient" style="display:none;" onclick="showRecipientPanel()"><i class="fa-solid fa-hospital"></i> Recipient Dashboard</button>
+              <button class="btn-secondary" id="profile-back-admin" style="display:none;" onclick="showAdminPanel()"><i class="fa-solid fa-user-shield"></i> Admin Dashboard</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <p>&copy; 2026 RedPulse Blood Donation Platform. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
