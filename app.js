@@ -1092,4 +1092,3 @@ async function handleHospitalSearch(event) {
     resultsContainer.appendChild(card);
   });
 }
-
